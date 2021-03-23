@@ -38,6 +38,16 @@ variable "common_tags" {
   type        = map(string)
   default     = {}
 }
+
+# variable "common_tags_vaultvpc" {
+#   description = "Common tags for resources in the vault vpc / firehawk-main project."
+#   type        = map(string)
+# }
+
+# variable "common_tags_rendervpc" {
+#   description = "Common tags for resources in the render vpc / firehawk-render-cluster project."
+#   type        = map(string)
+# }
 variable "permitted_cidr_list" {
   description = "The list of CIDR blocks, (including public CIDR's) that will be able to access the host."
   type        = list(string)
