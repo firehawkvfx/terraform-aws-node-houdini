@@ -7,18 +7,21 @@ resource "aws_security_group" "node_centos7_houdini" {
   vpc_id      = var.vpc_id
   description = "Vault client security group"
   tags        = merge(map("Name", var.name), var.common_tags, local.extra_tags)
+
+  # this should be further restricted in a production environment
   ingress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = var.permitted_cidr_list_private
-    description = "all incoming traffic from vpc, vpn dhcp, and remote subnet"
+    protocol        = "-1"
+    from_port       = 0
+    to_port         = 0
+    cidr_blocks     = var.permitted_cidr_list_private
+    security_groups = var.security_group_ids
+    description     = "all incoming traffic from vpc, vpn dhcp, and remote subnet"
   }
   ingress {
     protocol        = "tcp"
     from_port       = 22
     to_port         = 22
-    cidr_blocks     = var.permitted_cidr_list
+    cidr_blocks     = var.permitted_cidr_list_private
     security_groups = var.security_group_ids
     description     = "SSH"
   }
@@ -30,14 +33,14 @@ resource "aws_security_group" "node_centos7_houdini" {
     security_groups = var.security_group_ids
     description     = "Vault Web UI Forwarding"
   }
-  
+
   ingress {
-    protocol        = "tcp"
-    from_port       = 8080
-    to_port         = 8080
-    cidr_blocks     = var.permitted_cidr_list
+    protocol    = "tcp"
+    from_port   = 8080
+    to_port     = 8080
+    cidr_blocks = var.permitted_cidr_list
     # security_groups = var.security_group_ids
-    description     = "Vault Web UI Forwarding"
+    description = "Vault Web UI Forwarding"
   }
   ingress {
     protocol    = "icmp"
@@ -92,8 +95,8 @@ locals {
     role  = "node_centos7_houdini"
     route = "private"
   }
-  private_ip                                 = element(concat(aws_instance.node_centos7_houdini.*.private_ip, list("")), 0)
-  id                                         = element(concat(aws_instance.node_centos7_houdini.*.id, list("")), 0)
+  private_ip                             = element(concat(aws_instance.node_centos7_houdini.*.private_ip, list("")), 0)
+  id                                     = element(concat(aws_instance.node_centos7_houdini.*.id, list("")), 0)
   node_centos7_houdini_security_group_id = element(concat(aws_security_group.node_centos7_houdini.*.id, list("")), 0)
-  vpc_security_group_ids                     = [local.node_centos7_houdini_security_group_id]
+  vpc_security_group_ids                 = [local.node_centos7_houdini_security_group_id]
 }
