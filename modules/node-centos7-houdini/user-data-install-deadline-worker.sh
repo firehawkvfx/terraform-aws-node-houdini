@@ -54,7 +54,7 @@ function retrieve_file {
   # vault kv get -format=json /${resourcetier}/files/$target_path > /usr/local/openvpn_as/scripts/seperate/ca_test.crt
 
   local -r response=$(retry \
-  "vault kv get -format=json /$resourcetier/deadlinedb/client_cert_files/$source_path" \
+  "vault kv get -format=json /$resourcetier/deadline/client_cert_files/$source_path" \
   "Trying to read secret from vault")
   sudo mkdir -p $(dirname $target_path) # ensure the directory exists
   echo $response | jq -r .data.data | sudo tee $target_path # retrieve full json blob to later pass permissions if required.
