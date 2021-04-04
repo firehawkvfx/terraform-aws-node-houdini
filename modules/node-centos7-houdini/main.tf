@@ -58,14 +58,21 @@ resource "aws_security_group" "node_centos7_houdini" {
   }
 }
 data "template_file" "user_data_auth_client" {
-  template = file("${path.module}/user-data-auth-ssh-host-iam.sh")
+  template = format("%s%s%s",
+    file("${path.module}/user-data-iam-auth-ssh-host-consul.sh"),
+    file("${path.module}/user-data-install-deadline-worker.sh"),
+    file("${path.module}/user-data-revoke-token.sh")
+  )
   vars = {
     consul_cluster_tag_key   = var.consul_cluster_tag_key
     consul_cluster_tag_value = var.consul_cluster_name
     aws_internal_domain      = var.aws_internal_domain
     aws_external_domain      = "" # External domain is not used for internal hosts.
     example_role_name        = "rendernode-vault-role"
-    vault_token              = ""
+
+    resourcetier                     = var.common_tags["resourcetier"]
+    deadline_installer_script_repo   = "https://github.com/firehawkvfx/packer-firehawk-amis.git"
+    deadline_installer_script_branch = "deadline-immutable" # TODO This must become immutable - version it
   }
 }
 data "terraform_remote_state" "rendernode_profile" { # read the arn with data.terraform_remote_state.packer_profile.outputs.instance_role_arn, or read the profile name with data.terraform_remote_state.packer_profile.outputs.instance_profile_name
