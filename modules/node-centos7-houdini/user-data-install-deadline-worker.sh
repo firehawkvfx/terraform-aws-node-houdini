@@ -60,16 +60,17 @@ function retrieve_file {
     local -r target_path="$2"
   fi
   echo "response:"
-  local -r response=$(retry \
+  local -r response="$(retry \
   "vault kv get -format=json $source_path" \
-  "Trying to read secret from vault")
+  "Trying to read secret from vault")"
 
   echo "$response"
-  echo "mkdir: $target_path"
+  echo "mkdir: $(dirname $target_path)"
   sudo mkdir -p "$(dirname $target_path)" # ensure the directory exists
   # echo $response | jq -r .data.data | sudo tee $target_path # retrieve full json blob to later pass permissions if required.
   echo "write output"
-  echo $response | jq -r .data.data.file | base64 --decode | sudo tee $target_path
+  echo "$response" | jq -r '.data.data.file' | base64 --decode | sudo tee $target_path
+  if [[ ! -f "$target_path" ]] || [[ -z "$(cat $target_path)" ]]
   echo "retrival done."
   # skipping permissions
 }
@@ -118,7 +119,7 @@ until consul catalog services | grep -m 1 "deadlinedb"; do sleep 1 ; done
 retry \
   "vault login --no-print -method=aws header_value=vault.service.consul role=${example_role_name}" \
   "Waiting for Vault login"
-echo "Aquiring vault data..."
+echo "Aquiring vault data... $client_cert_vault_path to $client_cert_file_path"
 # Retrieve previously generated secrets from Vault.  Would be better if we can use vault as an intermediary to generate certs.
 retrieve_file "$client_cert_vault_path" "$client_cert_file_path"
 echo "Revoking vault token..."
