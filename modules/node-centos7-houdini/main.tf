@@ -79,7 +79,7 @@ data "template_file" "user_data_auth_client" {
     aws_external_domain      = "" # External domain is not used for internal hosts.
     example_role_name        = "rendernode-vault-role"
 
-    deadlineuser_name                = "centos"
+    deadlineuser_name                = "deadlineuser"
     deadline_version                 = "10.1.9.2"
     installers_bucket                = "software.${var.bucket_extension}"
     resourcetier                     = var.common_tags["resourcetier"]
