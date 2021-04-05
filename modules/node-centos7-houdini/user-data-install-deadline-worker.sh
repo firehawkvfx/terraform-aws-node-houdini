@@ -68,8 +68,14 @@ function retrieve_file {
   echo "mkdir: $(dirname $target_path)"
   sudo mkdir -p "$(dirname $target_path)" # ensure the directory exists
   # echo $response | jq -r .data.data | sudo tee $target_path # retrieve full json blob to later pass permissions if required.
-  echo "write output"
-  echo "$response" | jq -r '.data.data.file' | base64 --decode | sudo tee $target_path
+  echo "get raw"
+  raw=$(echo "$response" | jq -r '.data.data.file')
+  echo "decode"
+  decode=$(echo "$raw" | base64 --decode)
+  echo "write to file"
+  echo "$decode" | sudo tee $target_path
+  # echo "write output"
+  # echo "$response" | jq -r '.data.data.file' | base64 --decode | sudo tee $target_path
   if [[ ! -f "$target_path" ]] || [[ -z "$(cat $target_path)" ]]; then
     echo "Error: no file or empty result at $target_path"
     exit 1
