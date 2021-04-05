@@ -70,7 +70,10 @@ function retrieve_file {
   # echo $response | jq -r .data.data | sudo tee $target_path # retrieve full json blob to later pass permissions if required.
   echo "write output"
   echo "$response" | jq -r '.data.data.file' | base64 --decode | sudo tee $target_path
-  if [[ ! -f "$target_path" ]] || [[ -z "$(cat $target_path)" ]]
+  if [[ ! -f "$target_path" ]] || [[ -z "$(cat $target_path)" ]]; then
+    echo "Error: no file or empty result at $target_path"
+    exit 1
+  fi
   echo "retrival done."
   # skipping permissions
 }
