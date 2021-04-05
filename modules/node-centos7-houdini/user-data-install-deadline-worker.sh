@@ -61,7 +61,7 @@ function retrieve_file {
   fi
   echo "response:"
   local -r response=$(retry \
-  "vault kv get -format=json $source_path" \
+  "vault kv get -format=json $source_path/file" \
   "Trying to read secret from vault")
 
   echo "$response"
@@ -81,14 +81,24 @@ function retrieve_file {
   # echo "write output"
   # raw=$( python -c "import json; blob=json.loads($response); print( blob[\"data\"][\"data\"][\"file\"] )" )
   echo "Check file path is writable"
-  if [[ ! -f "$target_path" ]]; then touch $target_path; fi
+  if [[ ! -f "$target_path" ]]; then 
+    touch "$target_path"
+  else
+    echo "Error: Path not writable: $target_path "
+  fi
+  if [[ -f "$target_path" ]]; then
+    sudo chmod u+w "$target_path"
+  else
+    echo "Error: path does not exist, var may not be a file: $target_path "
+  fi
   # sudo chmod u+w $target_path
   echo "Write file content: single operation"
-  echo $(retry \
-  "vault kv get -format=json $source_path" \
-  "Trying to read secret from vault") | jq -r '.data.data.file' | base64 --decode > $target_path
-  echo "Write file content from var"
-  echo "$response" | jq -r '.data.data.file' | base64 --decode > $target_path
+  # echo $(retry \
+  # "vault kv get -format=json $source_path" \
+  # "Trying to read secret from vault") | jq -r '.data.data.file' | base64 --decode > $target_path
+  # echo "Write file content from var"
+  # echo "$response" | jq -r '.data.data.file' | base64 --decode > $target_path
+  echo "$response" | base64 --decode > $target_path
   if [[ ! -f "$target_path" ]] || [[ -z "$(cat $target_path)" ]]; then
     echo "Error: no file or empty result at $target_path"
     exit 1
