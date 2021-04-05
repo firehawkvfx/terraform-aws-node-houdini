@@ -82,8 +82,11 @@ variable "common_tags_rendervpc" {
   description = "Common tags for resources in the render vpc / firehawk-render-cluster project."
   type        = map(string)
 }
-
 variable "bucket_extension_vault" {
     description = "The bucket extension where the terraform remote state resides"
+    type = string
+}
+variable "bucket_extension" {
+    description = "The bucket extension where the software installers reside"
     type = string
 }

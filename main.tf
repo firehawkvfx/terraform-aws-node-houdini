@@ -70,7 +70,6 @@ locals {
   common_tags                = var.common_tags
   mount_path                 = var.resourcetier
   vpc_id                     = data.aws_vpc.rendervpc.id
-  # vpc_cidr                   = data.aws_vpc.rendervpc.cidr_block
   aws_internet_gateway       = data.aws_internet_gateway.gw.id
   vpn_cidr                   = var.vpn_cidr
   onsite_private_subnet_cidr = var.onsite_private_subnet_cidr
@@ -88,15 +87,15 @@ module "node_centos7_houdini" {
   consul_cluster_tag_key      = var.consul_cluster_tag_key
   aws_internal_domain         = var.aws_internal_domain
   vpc_id                      = local.vpc_id
-  # vpc_cidr                    = local.vpc_cidr
   bucket_extension_vault      = var.bucket_extension_vault
+  bucket_extension            = var.bucket_extension
   private_subnet_ids          = local.private_subnet_ids
   permitted_cidr_list         = ["${local.onsite_public_ip}/32", var.remote_cloud_public_ip_cidr, var.remote_cloud_private_ip_cidr, local.onsite_private_subnet_cidr, local.vpn_cidr, data.aws_vpc.rendervpc.cidr_block, data.aws_vpc.vaultvpc.cidr_block]
-  permitted_cidr_list_private = [ var.remote_cloud_private_ip_cidr, local.onsite_private_subnet_cidr, local.vpn_cidr ]
+  permitted_cidr_list_private = [var.remote_cloud_private_ip_cidr, local.onsite_private_subnet_cidr, local.vpn_cidr]
   security_group_ids = [
     data.terraform_remote_state.bastion_security_group.outputs.security_group_id,
     data.terraform_remote_state.vpn_security_group.outputs.security_group_id,
   ]
-  aws_key_name                = var.aws_key_name
-  common_tags                 = local.common_tags
+  aws_key_name = var.aws_key_name
+  common_tags  = local.common_tags
 }
