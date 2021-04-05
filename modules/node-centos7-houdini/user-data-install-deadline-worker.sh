@@ -48,7 +48,7 @@ function retry {
     echo "$description failed. Will sleep for 10 seconds and try again."
     sleep 10
   done;
-  echo "$description failed after $attempts attempts."
+  echo "$description failed after $attempts attempts. exit_status: $exit_status"
   exit $exit_status
 }
 function retrieve_file {
@@ -98,6 +98,7 @@ function add_sudo_user() {
   touch "/etc/sudoers.d/98_$user_name"; grep -qxF "$user_name ALL=(ALL) NOPASSWD:ALL" /etc/sudoers.d/98_$user_name || echo "$user_name ALL=(ALL) NOPASSWD:ALL" >> "/etc/sudoers.d/98_$user_name"
   sudo -i -u $user_name mkdir -p /home/$user_name/.ssh
   # Generate a public and private key - some tools can fail without one.
+  rm -frv /home/$user_name/.ssh/id_rsa*
   sudo -i -u $user_name bash -c "ssh-keygen -q -b 2048 -t rsa -f /home/$user_name/.ssh/id_rsa -C \"\" -N \"\""  
 }
 add_sudo_user $deadlineuser_name

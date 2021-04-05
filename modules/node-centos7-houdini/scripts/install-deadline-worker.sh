@@ -115,6 +115,7 @@ sudo tar -xvf $deadline_linux_installers_tar -C $deadline_installer_dir
 
 # Install Client:
 # Deadline Worker
+echo "Installing $deadline_installer_dir/$deadline_client_installer_filename"
 sudo $deadline_installer_dir/$deadline_client_installer_filename \
 --mode unattended \
 --launcherdaemon true \
@@ -139,5 +140,5 @@ sudo chmod u=wr,g=r,o-rwx /opt/Thinkbox/certs/*
 
 # sudo service deadline10launcher restart
 
-echo "Validate that a connection with the database can be established with the config"
-sudo /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/deadline_mongo --eval 'printjson(db.getCollectionNames())'
+# echo "Validate that a connection with the database can be established with the config"
+# sudo /opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/deadline_mongo --eval 'printjson(db.getCollectionNames())'
