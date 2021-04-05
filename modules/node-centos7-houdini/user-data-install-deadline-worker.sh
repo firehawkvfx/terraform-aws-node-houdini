@@ -60,25 +60,35 @@ function retrieve_file {
     local -r target_path="$2"
   fi
   echo "response:"
-  local -r response="$(retry \
+  local -r response=$(retry \
   "vault kv get -format=json $source_path" \
-  "Trying to read secret from vault")"
+  "Trying to read secret from vault")
 
   echo "$response"
   echo "mkdir: $(dirname $target_path)"
   sudo mkdir -p "$(dirname $target_path)" # ensure the directory exists
   # echo $response | jq -r .data.data | sudo tee $target_path # retrieve full json blob to later pass permissions if required.
-  echo "decode"
-  # jq seems to fail decoding some certs, so we use python instead.
-  decoded="$(blob=$response python -c \"import os,json; blob=os.environ['blob']; print( json.loads(blob)['data']['data']['file'] )\" | base64 --decode)"
+  # echo "decode"
+  # # jq seems to fail decoding some certs, so we use python instead.
+  # decoded="$(blob=$response python -c \"import os,json; blob=os.environ['blob']; print( json.loads(blob)['data']['data']['file'] )\" | base64 --decode)"
+  # decoded="$(blob=$response python -c \"import os,json; print(os.environ['blob'])\")"
+  
   # raw=$(echo "$response" | jq -r '.data.data.file')
   # echo "decode"
   # decode=$(echo "$raw" | base64 --decode)
-  echo "write to file"
-  echo "$decode" | sudo tee $target_path
+  # echo "write to file"
+  # echo "$decode" | sudo tee $target_path
   # echo "write output"
   # raw=$( python -c "import json; blob=json.loads($response); print( blob[\"data\"][\"data\"][\"file\"] )" )
-  # echo "$response" | jq -r '.data.data.file' | base64 --decode | sudo tee $target_path
+  echo "Check file path is writable"
+  if [[ ! -f "$target_path" ]]; then touch $target_path; fi
+  # sudo chmod u+w $target_path
+  echo "Write file content: single operation"
+  echo $(retry \
+  "vault kv get -format=json $source_path" \
+  "Trying to read secret from vault") | jq -r '.data.data.file' | base64 --decode > $target_path
+  echo "Write file content from var"
+  echo "$response" | jq -r '.data.data.file' | base64 --decode > $target_path
   if [[ ! -f "$target_path" ]] || [[ -z "$(cat $target_path)" ]]; then
     echo "Error: no file or empty result at $target_path"
     exit 1
