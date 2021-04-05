@@ -52,18 +52,25 @@ function retry {
   exit $exit_status
 }
 function retrieve_file {
+  echo "source var"
   local -r source_path="$1"
   if [[ -z "$2" ]]; then
     local -r target_path="$source_path"
   else
     local -r target_path="$2"
   fi
+  echo "response:"
   local -r response=$(retry \
   "vault kv get -format=json $source_path" \
   "Trying to read secret from vault")
-  sudo mkdir -p $(dirname $target_path) # ensure the directory exists
+
+  echo "$response"
+  echo "mkdir: $target_path"
+  sudo mkdir -p "$(dirname $target_path)" # ensure the directory exists
   # echo $response | jq -r .data.data | sudo tee $target_path # retrieve full json blob to later pass permissions if required.
+  echo "write output"
   echo $response | jq -r .data.data.file | base64 --decode | sudo tee $target_path
+  echo "retrival done."
   # skipping permissions
 }
 
@@ -103,7 +110,8 @@ function add_sudo_user() {
 }
 add_sudo_user $deadlineuser_name
 
-echo "Waiting for consul deadlinedb service before attempting to retrieve Deadline remote cert..."
+printf "\n...Waiting for consul deadlinedb service before attempting to retrieve Deadline remote cert.\n\n"
+
 until consul catalog services | grep -m 1 "deadlinedb"; do sleep 1 ; done
 
 ### Vault Auth IAM Method CLI
