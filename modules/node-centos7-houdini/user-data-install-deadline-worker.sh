@@ -86,8 +86,14 @@ function add_sudo_user() {
     echo "ERROR: Could not find apt-get or yum."
     exit 1
   fi
-  echo "Adding user: $user_name with groups: $sudo_group $user_name"
-  sudo useradd -m -d /home/$user_name/ -s /bin/bash -G $sudo_group $user_name
+  echo "Ensuring user exists: $user_name with groups: $sudo_group $user_name"
+  if id "$user_name" &>/dev/null; then
+    echo 'User found.  Ensuring user is in sudoers.'
+    sudo usermod -a -G $sudo_group $user_name
+  else
+      echo 'user not found'
+      sudo useradd -m -d /home/$user_name/ -s /bin/bash -G $sudo_group $user_name
+  fi
   echo "Adding user as passwordless sudoer."
   touch "/etc/sudoers.d/98_$user_name"; grep -qxF "$user_name ALL=(ALL) NOPASSWD:ALL" /etc/sudoers.d/98_$user_name || echo "$user_name ALL=(ALL) NOPASSWD:ALL" >> "/etc/sudoers.d/98_$user_name"
   sudo -i -u $user_name mkdir -p /home/$user_name/.ssh
