@@ -57,6 +57,16 @@ resource "aws_security_group" "node_centos7_houdini" {
     description = "all outgoing traffic"
   }
 }
+data "aws_s3_bucket" "software_bucket" {
+  bucket = "software.${var.bucket_extension}"
+}
+resource "aws_s3_bucket_object" "update_scripts" {
+  for_each = fileset("${path.module}/scripts/", "*")
+  bucket   = data.aws_s3_bucket.software_bucket.id
+  key      = each.value
+  source   = "${path.module}/scripts/${each.value}"
+  etag     = filemd5("${path.module}/scripts/${each.value}")
+}
 data "template_file" "user_data_auth_client" {
   template = format("%s%s",
     file("${path.module}/user-data-iam-auth-ssh-host-consul.sh"),

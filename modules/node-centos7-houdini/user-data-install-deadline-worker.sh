@@ -1,31 +1,26 @@
 #!/bin/bash
 
-# This installs certificates with the DB.
-
 set -e
+exec > >(tee -a /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
-# User vars
-installers_bucket="${installers_bucket}" # TODO these must become vars
-deadlineuser_name="${deadlineuser_name}" # TODO these must become vars
-deadline_version="${deadline_version}" # TODO these must become vars
-dbport="27100"
-db_host_name="deadlinedb.service.consul" # TODO these must become vars
-deadline_proxy_certificate="Deadline10RemoteClient.pfx"
+# User Defaults: these will be replaced with terraform template vars, defaults are provided to allow copy / paste directly into a shell for debugging.  These values will not be used when deployed.
+deadlineuser_name="deadlineuser"
+resourcetier="dev"
+installers_bucket="software.$resourcetier.firehawkvfx.com"
+deadline_version="10.1.9.2"
+
+# User Vars: Set by terraform template
+deadlineuser_name="${deadlineuser_name}"
 resourcetier="${resourcetier}"
+installers_bucket="${installers_bucket}"
+deadline_version="${deadline_version}"
 
 # Script vars (implicit)
-attempts=5
-deadline_proxy_root_dir="$db_host_name:4433"
-deadline_client_certificate_basename="${deadline_client_certificate%.*}"
-deadline_linux_installers_tar="/tmp/Deadline-$deadline_version-linux-installers.tar" # temp dir since we just keep the extracted contents for repeat installs.
-deadline_linux_installers_filename="$(basename $deadline_linux_installers_tar)"
-deadline_linux_installers_basename="${deadline_linux_installers_filename%.*}"
-deadline_installer_dir="/home/$deadlineuser_name/Downloads/$deadline_linux_installers_basename"
-deadline_client_installer_filename="DeadlineClient-$deadline_version-linux-x64-installer.run"
-
-# # set hostname
-# cat /etc/hosts | grep -m 1 "127.0.0.1   $db_host_name" || echo "127.0.0.1   $db_host_name" | sudo tee -a /etc/hosts
-# sudo hostnamectl set-hostname $db_host_name
+VAULT_ADDR=https://vault.service.consul:8200
+client_cert_file_path="/opt/Thinkbox/certs/Deadline10RemoteClient.pfx"
+client_cert_vault_path="$resourcetier/deadline/client_cert_files/$client_cert_file_path"
+installer_file="install-deadline-worker.sh"
+installer_path="/home/$deadlineuser_name/Downloads/$installer_file"
 
 # Functions
 function has_yum {
@@ -34,31 +29,26 @@ function has_yum {
 function has_apt_get {
   [[ -n "$(command -v apt-get)" ]]
 }
-# Log the given message. All logs are written to stderr with a timestamp.
-function log {
- local -r message="$1"
- local -r timestamp=$(date +"%Y-%m-%d %H:%M:%S")
- >&2 echo -e "$timestamp $message"
-}
 # A retry function that attempts to run a command a number of times and returns the output
 function retry {
   local -r cmd="$1"
   local -r description="$2"
+  attempts=5
   for i in $(seq 1 $attempts); do
-    log "$description"
+    echo "$description"
     # The boolean operations with the exit status are there to temporarily circumvent the "set -e" at the
     # beginning of this script which exits the script immediatelly for error status while not losing the exit status code
     output=$(eval "$cmd") && exit_status=0 || exit_status=$?
     errors=$(echo "$output") | grep '^{' | jq -r .errors
-    log "$output"
+    echo "$output"
     if [[ $exit_status -eq 0 && -z "$errors" ]]; then
       echo "$output"
       return
     fi
-    log "$description failed. Will sleep for 10 seconds and try again."
+    echo "$description failed. Will sleep for 10 seconds and try again."
     sleep 10
   done;
-  log "$description failed after $attempts attempts."
+  echo "$description failed after $attempts attempts."
   exit $exit_status
 }
 function retrieve_file {
@@ -69,7 +59,7 @@ function retrieve_file {
     local -r target_path="$2"
   fi
   local -r response=$(retry \
-  "vault kv get -format=json /$resourcetier/deadline/client_cert_files/$source_path" \
+  "vault kv get -format=json $source_path" \
   "Trying to read secret from vault")
   sudo mkdir -p $(dirname $target_path) # ensure the directory exists
   # echo $response | jq -r .data.data | sudo tee $target_path # retrieve full json blob to later pass permissions if required.
@@ -77,84 +67,53 @@ function retrieve_file {
   # skipping permissions
 }
 
-echo "Waiting for consul deadlinedb service..."
+### Centos 7 fix: Failed dns lookup can cause sudo commands to slowdown
+if $(has_yum); then
+    hostname=$(hostname -s) 
+    echo "127.0.0.1   $hostname.${aws_internal_domain} $hostname" | tee -a /etc/hosts
+    hostnamectl set-hostname $hostname.${aws_internal_domain} # Red hat recommends that the hostname uses the FQDN.  hostname -f to resolve the domain may not work at this point on boot, so we use a var.
+    # systemctl restart network # we restart the network later, needed to update the host name
+fi
+
+### Create deadlineuser
+function add_sudo_user() {
+  local -r user_name="$1"
+  if $(has_apt_get); then
+    sudo_group=sudo
+  elif $(has_yum); then
+    sudo_group=wheel
+  else
+    echo "ERROR: Could not find apt-get or yum."
+    exit 1
+  fi
+  echo "Adding user: $user_name with groups: $sudo_group $user_name"
+  sudo useradd -m -d /home/$user_name/ -s /bin/bash -G $sudo_group $user_name
+  echo "Adding user as passwordless sudoer."
+  touch "/etc/sudoers.d/98_$user_name"; grep -qxF "$user_name ALL=(ALL) NOPASSWD:ALL" /etc/sudoers.d/98_$user_name || echo "$user_name ALL=(ALL) NOPASSWD:ALL" >> "/etc/sudoers.d/98_$user_name"
+  sudo -i -u $user_name mkdir -p /home/$user_name/.ssh
+  # Generate a public and private key - some tools can fail without one.
+  sudo -i -u $user_name bash -c "ssh-keygen -q -b 2048 -t rsa -f /home/$user_name/.ssh/id_rsa -C \"\" -N \"\""  
+}
+add_sudo_user $deadlineuser_name
+
+echo "Waiting for consul deadlinedb service before attempting to retrieve Deadline remote cert..."
 until consul catalog services | grep -m 1 "deadlinedb"; do sleep 1 ; done
 
 ### Vault Auth IAM Method CLI
-export VAULT_ADDR=https://vault.service.consul:8200
 retry \
   "vault login --no-print -method=aws header_value=vault.service.consul role=${example_role_name}" \
   "Waiting for Vault login"
 echo "Aquiring vault data..."
-
 # Retrieve previously generated secrets from Vault.  Would be better if we can use vault as an intermediary to generate certs.
-retrieve_file "/opt/Thinkbox/certs/Deadline10RemoteClient.pfx"
-# Revoke token
+retrieve_file "$client_cert_vault_path" "$client_cert_file_path"
+echo "Revoking vault token..."
 vault token revoke -self
 
 ### Install Deadline
-sudo mkdir -p "/home/$deadlineuser_name/Downloads"
-sudo chown $deadlineuser_name:$deadlineuser_name "/home/$deadlineuser_name/Downloads"
+# Client
+mkdir -p "$(dirname $installer_path)"
+aws s3api get-object --bucket "$installers_bucket" --key "$installer_file" "$installer_path"
+chown $deadlineuser_name:$deadlineuser_name $installer_path
+chmod u+x $installer_path
+sudo -i -u $deadlineuser_name installers_bucket="$installers_bucket" deadlineuser_name="$deadlineuser_name" deadline_version="$deadline_version" $installer_path
 
-# Download Deadline
-if [[ -f "$deadline_linux_installers_tar" ]]; then
-    echo "File already exists: $deadline_linux_installers_tar"
-else
-    aws s3api head-object --bucket $installers_bucket --key "Deadline-$deadline_version-linux-installers.tar"
-    exit_code=$?
-    if [[ $exit_code -eq 0 ]]; then
-        echo "...Downloading Deadline from: $installers_bucket"
-        aws s3api get-object --bucket $installers_bucket --key "$deadline_linux_installers_filename" "$deadline_linux_installers_tar"
-    else
-        echo "...Downloading Deadline from: thinkbox-installers"
-        aws s3api get-object --bucket thinkbox-installers --key "Deadline/$deadline_version/Linux/$deadline_linux_installers_basename" "$deadline_linux_installers_tar"
-    fi
-fi
-
-# Directories and permissions
-sudo mkdir -p /opt/Thinkbox
-sudo chown $deadlineuser_name:$deadlineuser_name /opt/Thinkbox
-sudo chmod u=rwX,g=rX,o-rwx /opt/Thinkbox
-
-# Client certs live here
-deadline_client_certificates_location="/opt/Thinkbox/certs"
-sudo mkdir -p "$deadline_client_certificates_location"
-sudo chown $deadlineuser_name:$deadlineuser_name $deadline_client_certificates_location
-sudo chmod u=rwX,g=rX,o-rwx $deadline_client_certificates_location
-
-sudo mkdir -p $deadline_installer_dir
-
-# Extract Installer
-sudo tar -xvf $deadline_linux_installers_tar -C $deadline_installer_dir
-
-# sudo apt-get install -y xdg-utils
-# sudo apt-get install -y lsb # required for render nodes as well
-sudo mkdir -p /usr/share/desktop-directories
-
-# Install Deadline Worker
-sudo $deadline_installer_dir/$deadline_client_installer_filename \
---mode unattended \
---debuglevel 2 \
---prefix /opt/Thinkbox/Deadline10 \
---connectiontype Remote \
---noguimode true \
---licensemode UsageBased \
---launcherdaemon true \
---slavestartup 1 \
---daemonuser $deadlineuser_name \
---enabletls true \
---tlsport 4433 \
---httpport 8080 \
---proxyrootdir $deadline_proxy_root_dir \
---proxycertificate $deadline_client_certificates_location/$deadline_proxy_certificate
-# --proxycertificatepassword {{ deadline_proxy_certificate_password }}
-
-# finalize permissions post install:
-sudo chown $deadlineuser_name:$deadlineuser_name /opt/Thinkbox/certs/*
-sudo chmod u=wr,g=r,o-rwx /opt/Thinkbox/certs/*
-sudo chmod u=wr,g=r,o=r /opt/Thinkbox/certs/ca.crt
-
-# sudo service deadline10launcher restart
-
-echo "Validate that a connection with the database can be established with the config"
-/opt/Thinkbox/DeadlineDatabase10/mongo/application/bin/deadline_mongo --eval 'printjson(db.getCollectionNames())'
