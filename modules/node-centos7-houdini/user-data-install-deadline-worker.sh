@@ -70,7 +70,7 @@ function retrieve_file {
   # echo $response | jq -r .data.data | sudo tee $target_path # retrieve full json blob to later pass permissions if required.
   echo "decode"
   # jq seems to fail decoding some certs, so we use python instead.
-  decoded="$(response=$response python -c "import os; response=os.environ['response']; import json; print( json.loads(response)['data']['data']['file'] )" | base64 --decode)"
+  decoded="$(blob=$response python -c \"import os,json; blob=os.environ['blob']; print( json.loads(blob)['data']['data']['file'] )\" | base64 --decode)"
   # raw=$(echo "$response" | jq -r '.data.data.file')
   # echo "decode"
   # decode=$(echo "$raw" | base64 --decode)
