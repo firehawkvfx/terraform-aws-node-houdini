@@ -135,7 +135,7 @@ sudo $deadline_installer_dir/$deadline_client_installer_filename \
 # finalize permissions post install:
 sudo chown $deadlineuser_name:$deadlineuser_name /opt/Thinkbox/certs/*
 sudo chmod u=wr,g=r,o-rwx /opt/Thinkbox/certs/*
-sudo chmod u=wr,g=r,o=r /opt/Thinkbox/certs/ca.crt
+# sudo chmod u=wr,g=r,o=r /opt/Thinkbox/certs/ca.crt
 
 # sudo service deadline10launcher restart
 
