@@ -58,10 +58,9 @@ resource "aws_security_group" "node_centos7_houdini" {
   }
 }
 data "template_file" "user_data_auth_client" {
-  template = format("%s%s%s",
+  template = format("%s%s",
     file("${path.module}/user-data-iam-auth-ssh-host-consul.sh"),
-    file("${path.module}/user-data-install-deadline-worker.sh"),
-    file("${path.module}/user-data-revoke-token.sh")
+    file("${path.module}/user-data-install-deadline-worker.sh")
   )
   vars = {
     consul_cluster_tag_key   = var.consul_cluster_tag_key
@@ -70,6 +69,9 @@ data "template_file" "user_data_auth_client" {
     aws_external_domain      = "" # External domain is not used for internal hosts.
     example_role_name        = "rendernode-vault-role"
 
+    deadlineuser_name                = "centos"
+    deadline_version                 = "10.1.9.2"
+    installers_bucket                = "software.${var.bucket_extension}"
     resourcetier                     = var.common_tags["resourcetier"]
     deadline_installer_script_repo   = "https://github.com/firehawkvfx/packer-firehawk-amis.git"
     deadline_installer_script_branch = "deadline-immutable" # TODO This must become immutable - version it
