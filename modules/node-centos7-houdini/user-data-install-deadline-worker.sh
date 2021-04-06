@@ -18,7 +18,7 @@ deadline_version="${deadline_version}"
 # Script vars (implicit)
 VAULT_ADDR=https://vault.service.consul:8200
 client_cert_file_path="/opt/Thinkbox/certs/Deadline10RemoteClient.pfx"
-client_cert_vault_path="$resourcetier/deadline/client_cert_files/$client_cert_file_path"
+client_cert_vault_path="$resourcetier/deadline/client_cert_files$client_cert_file_path"
 installer_file="install-deadline-worker.sh"
 installer_path="/home/$deadlineuser_name/Downloads/$installer_file"
 
