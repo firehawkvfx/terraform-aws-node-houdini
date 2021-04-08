@@ -61,9 +61,8 @@ function retrieve_file {
   fi
   echo "response:"
   local -r response=$(retry \
-  "vault kv get -format=json $source_path/file" \
+  "vault kv get -field=value $source_path/file" \
   "Trying to read secret from vault")
-
   echo "$response"
   echo "mkdir: $(dirname $target_path)"
   sudo mkdir -p "$(dirname $target_path)" # ensure the directory exists
