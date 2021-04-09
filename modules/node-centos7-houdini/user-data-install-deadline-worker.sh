@@ -148,11 +148,10 @@ printf "\n...Waiting for consul deadlinedb service before attempting to retrieve
 
 until consul catalog services | grep -m 1 "deadlinedb"; do sleep 1 ; done
 
-echo "Ensure REquired Directories exist with valid permissions"
+echo "Ensure Required Directories exist with valid permissions"
 mkdir -p $(dirname $client_cert_file_path)                                                                
 chown $deadlineuser_name:$deadlineuser_name /opt/Thinkbox/
 chown $deadlineuser_name:$deadlineuser_name /opt/Thinkbox/certs/
-chmod u=rw,g=rw,o-rwx $client_cert_file_path
 
 ### Vault Auth IAM Method CLI
 retry \
@@ -161,6 +160,8 @@ retry \
 echo "Aquiring vault data... $client_cert_vault_path to $client_cert_file_path"
 # Retrieve previously generated secrets from Vault.  Would be better if we can use vault as an intermediary to generate certs.
 retrieve_file "$client_cert_vault_path" "$client_cert_file_path"
+echo "Finalise permissions"
+chmod u=rw,g=rw,o-rwx $client_cert_file_path
 
 echo "Revoking vault token..."
 vault token revoke -self
