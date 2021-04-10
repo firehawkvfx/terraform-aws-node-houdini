@@ -92,6 +92,7 @@ module "node_centos7_houdini" {
     data.terraform_remote_state.bastion_security_group.outputs.security_group_id,
     data.terraform_remote_state.vpn_security_group.outputs.security_group_id,
   ]
-  aws_key_name = var.aws_key_name
-  common_tags  = local.common_tags
+  aws_key_name     = var.aws_key_name
+  common_tags      = local.common_tags
+  deadline_version = var.deadline_version
 }

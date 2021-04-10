@@ -80,7 +80,7 @@ data "template_file" "user_data_auth_client" {
     example_role_name        = "rendernode-vault-role"
 
     deadlineuser_name                = "deadlineuser"
-    deadline_version                 = "10.1.9.2"
+    deadline_version                 = var.deadline_version
     installers_bucket                = "software.${var.bucket_extension}"
     resourcetier                     = var.common_tags["resourcetier"]
     deadline_installer_script_repo   = "https://github.com/firehawkvfx/packer-firehawk-amis.git"

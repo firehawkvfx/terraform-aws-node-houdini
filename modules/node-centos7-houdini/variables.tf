@@ -95,10 +95,15 @@ variable "aws_internal_domain" {
   type        = string
 }
 variable "bucket_extension_vault" {
-    description = "The bucket extension where the terraform remote state resides"
-    type = string
+  description = "The bucket extension where the terraform remote state resides"
+  type        = string
 }
 variable "bucket_extension" {
-    description = "The bucket extension where the software installers reside"
-    type = string
+  description = "The bucket extension where the software installers reside"
+  type        = string
+}
+
+variable "deadline_version" {
+  description = "The deadline version to install"
+  type        = string
 }
