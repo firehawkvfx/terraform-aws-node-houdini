@@ -96,8 +96,8 @@ function retrieve_file {
     echo "Error: path does not exist, var may not be a file: $target_path "
   fi
   # sudo chmod u+w $target_path
-  echo "test decode"
-  echo "$response" | base64 --decode
+  # echo "test decode"
+  # echo "$response" | base64 --decode
   echo "Write file content: single operation"
   echo "$response" | base64 --decode > $target_path
   if [[ ! -f "$target_path" ]] || [[ -z "$(cat $target_path)" ]]; then
