@@ -9,10 +9,6 @@ provider "aws" {
 }
 
 data "aws_region" "current" {}
-# data "aws_vpc" "rendervpc" {
-#   default = false
-#   tags    = local.common_tags
-# }
 
 data "aws_vpc" "rendervpc" {
   default = false
