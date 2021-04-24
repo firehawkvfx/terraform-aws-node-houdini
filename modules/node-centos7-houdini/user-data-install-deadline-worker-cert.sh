@@ -152,6 +152,7 @@ retry \
 # Retrieve previously generated secrets from Vault.  Would be better if we can use vault as an intermediary to generate certs.
 retrieve_file "$client_cert_vault_path" "$client_cert_file_path"
 echo "Finalise permissions"
+chown $deadlineuser_name:$deadlineuser_name $client_cert_file_path
 chmod u=rw,g=rw,o-rwx $client_cert_file_path
 
 echo "Revoking vault token..."
