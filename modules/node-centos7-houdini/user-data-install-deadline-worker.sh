@@ -157,11 +157,13 @@ chmod u=rw,g=rw,o-rwx $client_cert_file_path
 echo "Revoking vault token..."
 vault token revoke -self
 
-### Install Deadline
-# Client
-mkdir -p "$(dirname $installer_path)"
-aws s3api get-object --bucket "$installers_bucket" --key "$installer_file" "$installer_path"
-chown $deadlineuser_name:$deadlineuser_name $installer_path
-chmod u+x $installer_path
-sudo -i -u $deadlineuser_name installers_bucket="$installers_bucket" deadlineuser_name="$deadlineuser_name" deadline_version="$deadline_version" $installer_path
+# ### Install Deadline
+# # Client
+# mkdir -p "$(dirname $installer_path)"
+# aws s3api get-object --bucket "$installers_bucket" --key "$installer_file" "$installer_path"
+# chown $deadlineuser_name:$deadlineuser_name $installer_path
+# chmod u+x $installer_path
+# sudo -i -u $deadlineuser_name installers_bucket="$installers_bucket" deadlineuser_name="$deadlineuser_name" deadline_version="$deadline_version" $installer_path
+
+sudo service deadline10launcher restart
 
