@@ -25,22 +25,34 @@ resource "aws_security_group" "node_centos7_houdini" {
     security_groups = var.security_group_ids
     description     = "SSH"
   }
+  # ingress {
+  #   protocol        = "tcp"
+  #   from_port       = 8200
+  #   to_port         = 8200
+  #   cidr_blocks     = var.permitted_cidr_list
+  #   security_groups = var.security_group_ids
+  #   description     = "Vault"
+  # }
   ingress {
-    protocol        = "tcp"
-    from_port       = 8200
-    to_port         = 8200
-    cidr_blocks     = var.permitted_cidr_list
-    security_groups = var.security_group_ids
-    description     = "Vault Web UI Forwarding"
+    protocol  = "tcp"
+    from_port = 27100
+    to_port   = 27100
+    cidr_blocks = var.permitted_cidr_list_private
+    description = "DeadlineDB MongoDB"
   }
-
   ingress {
-    protocol    = "tcp"
-    from_port   = 8080
-    to_port     = 8080
-    cidr_blocks = var.permitted_cidr_list
-    # security_groups = var.security_group_ids
-    description = "Vault Web UI Forwarding"
+    protocol  = "tcp"
+    from_port = 8080
+    to_port   = 8080
+    cidr_blocks = var.permitted_cidr_list_private
+    description = "Deadline And Deadline RCS"
+  }
+  ingress {
+    protocol  = "tcp"
+    from_port = 4433
+    to_port   = 4433
+    cidr_blocks = var.permitted_cidr_list_private
+    description = "Deadline RCS TLS HTTPS"
   }
   ingress {
     protocol    = "icmp"
