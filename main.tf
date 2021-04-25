@@ -54,6 +54,14 @@ data "terraform_remote_state" "bastion_security_group" { # read the arn with dat
     region = data.aws_region.current.name
   }
 }
+data "terraform_remote_state" "rendernode_security_group" { # read the arn with data.terraform_remote_state.packer_profile.outputs.instance_role_arn, or read the profile name with data.terraform_remote_state.packer_profile.outputs.instance_profile_name
+  backend = "s3"
+  config = {
+    bucket = "state.terraform.${var.bucket_extension}"
+    key    = "firehawk-main/modules/terraform-aws-sg-rendernode/module/terraform.tfstate"
+    region = data.aws_region.current.name
+  }
+}
 data "terraform_remote_state" "vpn_security_group" { # read the arn with data.terraform_remote_state.packer_profile.outputs.instance_role_arn, or read the profile name with data.terraform_remote_state.packer_profile.outputs.instance_profile_name
   backend = "s3"
   config = {
@@ -91,6 +99,9 @@ module "node_centos7_houdini" {
   security_group_ids = [
     data.terraform_remote_state.bastion_security_group.outputs.security_group_id,
     data.terraform_remote_state.vpn_security_group.outputs.security_group_id,
+  ]
+  vpc_security_group_ids = [
+    data.terraform_remote_state.rendernode_security_group.outputs.security_group_id
   ]
   aws_key_name     = var.aws_key_name
   common_tags      = local.common_tags

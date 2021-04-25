@@ -1,84 +1,16 @@
 # A vault client host with consul registration and signed host keys from vault.
 
 data "aws_region" "current" {}
-resource "aws_security_group" "node_centos7_houdini" {
-  count       = var.create_vpc ? 1 : 0
-  name        = var.name
-  vpc_id      = var.vpc_id
-  description = "Vault client security group"
-  tags        = merge(map("Name", var.name), var.common_tags, local.extra_tags)
-
-  # this should be further restricted in a production environment
-  ingress {
-    protocol        = "-1"
-    from_port       = 0
-    to_port         = 0
-    cidr_blocks     = var.permitted_cidr_list_private
-    security_groups = var.security_group_ids
-    description     = "all incoming traffic from vpc, vpn dhcp, and remote subnet"
-  }
-  ingress {
-    protocol        = "tcp"
-    from_port       = 22
-    to_port         = 22
-    cidr_blocks     = var.permitted_cidr_list_private
-    security_groups = var.security_group_ids
-    description     = "SSH"
-  }
-  # ingress {
-  #   protocol        = "tcp"
-  #   from_port       = 8200
-  #   to_port         = 8200
-  #   cidr_blocks     = var.permitted_cidr_list
-  #   security_groups = var.security_group_ids
-  #   description     = "Vault"
-  # }
-  ingress {
-    protocol  = "tcp"
-    from_port = 27100
-    to_port   = 27100
-    cidr_blocks = var.permitted_cidr_list_private
-    description = "DeadlineDB MongoDB"
-  }
-  ingress {
-    protocol  = "tcp"
-    from_port = 8080
-    to_port   = 8080
-    cidr_blocks = var.permitted_cidr_list_private
-    description = "Deadline And Deadline RCS"
-  }
-  ingress {
-    protocol  = "tcp"
-    from_port = 4433
-    to_port   = 4433
-    cidr_blocks = var.permitted_cidr_list_private
-    description = "Deadline RCS TLS HTTPS"
-  }
-  ingress {
-    protocol    = "icmp"
-    from_port   = 8
-    to_port     = 0
-    cidr_blocks = var.permitted_cidr_list
-    description = "ICMP ping traffic"
-  }
-  egress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "all outgoing traffic"
-  }
-}
 data "aws_s3_bucket" "software_bucket" {
   bucket = "software.${var.bucket_extension}"
 }
-resource "aws_s3_bucket_object" "update_scripts" {
-  for_each = fileset("${path.module}/scripts/", "*")
-  bucket   = data.aws_s3_bucket.software_bucket.id
-  key      = each.value
-  source   = "${path.module}/scripts/${each.value}"
-  etag     = filemd5("${path.module}/scripts/${each.value}")
-}
+# resource "aws_s3_bucket_object" "update_scripts" {
+#   for_each = fileset("${path.module}/scripts/", "*")
+#   bucket   = data.aws_s3_bucket.software_bucket.id
+#   key      = each.value
+#   source   = "${path.module}/scripts/${each.value}"
+#   etag     = filemd5("${path.module}/scripts/${each.value}")
+# }
 locals {
   resourcetier           = var.common_tags["resourcetier"]
   client_cert_file_path  = "/opt/Thinkbox/certs/Deadline10RemoteClient.pfx"
@@ -124,7 +56,7 @@ resource "aws_instance" "node_centos7_houdini" {
   tags                   = merge(map("Name", var.name), var.common_tags, local.extra_tags)
   user_data              = data.template_file.user_data_auth_client.rendered
   iam_instance_profile   = data.terraform_remote_state.rendernode_profile.outputs.instance_profile_name
-  vpc_security_group_ids = local.vpc_security_group_ids
+  vpc_security_group_ids = var.vpc_security_group_ids
   root_block_device {
     delete_on_termination = true
   }
@@ -136,6 +68,6 @@ locals {
   }
   private_ip                             = element(concat(aws_instance.node_centos7_houdini.*.private_ip, list("")), 0)
   id                                     = element(concat(aws_instance.node_centos7_houdini.*.id, list("")), 0)
-  node_centos7_houdini_security_group_id = element(concat(aws_security_group.node_centos7_houdini.*.id, list("")), 0)
-  vpc_security_group_ids                 = [local.node_centos7_houdini_security_group_id]
+  # node_centos7_houdini_security_group_id = element(concat(aws_security_group.node_centos7_houdini.*.id, list("")), 0)
+  # vpc_security_group_ids                 = [local.node_centos7_houdini_security_group_id]
 }

@@ -79,3 +79,7 @@ variable "deadline_version" {
   description = "The deadline version to install"
   type        = string
 }
+
+variable "vpc_security_group_ids" {
+  description = "The list of security groups to attach to the instance."
+}
