@@ -17,47 +17,19 @@ variable "vpc_id" {
   type        = string
   default     = null
 }
-# variable "vpc_cidr" {
-#   description = "The CIDR block that contains all subnets within the VPC."
-#   type        = string
-# }
-
-# variable "vpn_cidr" {
-#   description = "The CIDR range that the vpn will assign using DHCP.  These are virtual addresses for routing traffic."
-#   type        = string
-# }
-
-# variable "deployer_ip_cidr" {
-#   description = "The remote public address that will connect to the bastion instance and other public instances.  This is used to limit inbound access to public facing hosts like the VPN from your site's public IP."
-#   type        = string
-#   default     = null
-# }
-
 variable "common_tags" {
   description = "A map of common tags to assign to the resources created by this module"
   type        = map(string)
   default     = {}
 }
-
-# variable "common_tags_vaultvpc" {
-#   description = "Common tags for resources in the vault vpc / firehawk-main project."
-#   type        = map(string)
-# }
-
-# variable "common_tags_rendervpc" {
-#   description = "Common tags for resources in the render vpc / firehawk-render-cluster project."
-#   type        = map(string)
-# }
 variable "permitted_cidr_list" {
   description = "The list of CIDR blocks, (including public CIDR's) that will be able to access the host."
   type        = list(string)
 }
-
 variable "permitted_cidr_list_private" {
   description = "The list of private CIDR blocks that will be able to access the host."
   type        = list(string)
 }
-
 variable "security_group_ids" {
   description = "The list of security group ID's that have SSH access to the node"
   type        = list(string)
