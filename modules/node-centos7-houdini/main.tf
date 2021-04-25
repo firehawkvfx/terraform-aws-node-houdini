@@ -71,3 +71,4 @@ locals {
   # node_centos7_houdini_security_group_id = element(concat(aws_security_group.node_centos7_houdini.*.id, list("")), 0)
   # vpc_security_group_ids                 = [local.node_centos7_houdini_security_group_id]
 }
+
