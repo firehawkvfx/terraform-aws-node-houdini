@@ -95,3 +95,7 @@ variable "deadline_version" {
   description = "The deadline version to install"
   type        = string
 }
+variable "user_data" {
+  description = "The user data for the render node"
+  type = string
+}

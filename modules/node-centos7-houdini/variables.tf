@@ -74,12 +74,14 @@ variable "bucket_extension" {
   description = "The bucket extension where the software installers reside"
   type        = string
 }
-
 variable "deadline_version" {
   description = "The deadline version to install"
   type        = string
 }
-
 variable "vpc_security_group_ids" {
   description = "The list of security groups to attach to the instance."
+}
+variable "user_data" {
+  description = "The user data for the render node"
+  type = string
 }

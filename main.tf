@@ -106,4 +106,5 @@ module "node_centos7_houdini" {
   aws_key_name     = var.aws_key_name
   common_tags      = local.common_tags
   deadline_version = var.deadline_version
+  user_data = var.user_data
 }
