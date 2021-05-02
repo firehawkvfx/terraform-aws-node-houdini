@@ -55,7 +55,7 @@ resource "aws_instance" "node_centos7_houdini" {
   subnet_id              = tolist(var.private_subnet_ids)[0]
   tags                   = merge(map("Name", var.name), var.common_tags, local.extra_tags)
   # user_data              = data.template_file.user_data_auth_client.rendered
-  user_data = var.user_data
+  user_data = base64decode(var.user_data)
   iam_instance_profile   = data.terraform_remote_state.rendernode_profile.outputs.instance_profile_name
   vpc_security_group_ids = var.vpc_security_group_ids
   root_block_device {

@@ -18,7 +18,7 @@ dependency "terraform-aws-user-data-rendernode" {
 inputs = merge(
   local.common_vars.inputs,
   {
-    user_data          = dependency.terraform-aws-user-data-rendernode.outputs.user_data
+    user_data          = dependency.terraform-aws-user-data-rendernode.outputs.user_data_base64
   }
 )
 
