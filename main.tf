@@ -1,12 +1,6 @@
-provider "null" {
-  version = "~> 3.0"
-}
+provider "null" {}
 
-provider "aws" {
-  #  if you haven't installed and configured the aws cli, you will need to provide your aws access key and secret key.
-  # in a dev environment these version locks below can be disabled.  in production, they should be locked based on the suggested versions from terraform init.
-  version = "~> 3.15.0"
-}
+provider "aws" {}
 
 data "aws_region" "current" {}
 
@@ -24,7 +18,7 @@ data "aws_internet_gateway" "gw" {
 }
 data "aws_subnet_ids" "public" {
   vpc_id = data.aws_vpc.rendervpc.id
-  tags   = map("area", "public")
+  tags   = tomap({ "area" : "public" })
 }
 data "aws_subnet" "public" {
   for_each = data.aws_subnet_ids.public.ids
@@ -32,7 +26,7 @@ data "aws_subnet" "public" {
 }
 data "aws_subnet_ids" "private" {
   vpc_id = data.aws_vpc.rendervpc.id
-  tags   = map("area", "private")
+  tags   = tomap({ "area" : "private" })
 }
 data "aws_subnet" "private" {
   for_each = data.aws_subnet_ids.private.ids
@@ -40,11 +34,11 @@ data "aws_subnet" "private" {
 }
 data "aws_route_tables" "public" {
   vpc_id = data.aws_vpc.rendervpc.id
-  tags   = map("area", "public")
+  tags   = tomap({ "area" : "public" })
 }
 data "aws_route_tables" "private" {
   vpc_id = data.aws_vpc.rendervpc.id
-  tags   = map("area", "private")
+  tags   = tomap({ "area" : "private" })
 }
 data "terraform_remote_state" "bastion_security_group" { # read the arn with data.terraform_remote_state.packer_profile.outputs.instance_role_arn, or read the profile name with data.terraform_remote_state.packer_profile.outputs.instance_profile_name
   backend = "s3"
@@ -106,5 +100,5 @@ module "node_centos7_houdini" {
   aws_key_name     = var.aws_key_name
   common_tags      = local.common_tags
   deadline_version = var.deadline_version
-  user_data = var.user_data
+  user_data        = var.user_data
 }

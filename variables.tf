@@ -1,5 +1,5 @@
 variable "aws_key_name" {
-  type = string
+  type    = string
   default = null
 }
 
@@ -55,7 +55,7 @@ variable "consul_cluster_name" {
 
 variable "onsite_public_ip" {
   description = "The public ip address of your onsite location to enable access to security groups and openVPN."
-  type = string
+  type        = string
 }
 
 variable "vpn_cidr" {
@@ -83,12 +83,12 @@ variable "common_tags_rendervpc" {
   type        = map(string)
 }
 variable "bucket_extension_vault" {
-    description = "The bucket extension where the terraform remote state resides"
-    type = string
+  description = "The bucket extension where the terraform remote state resides"
+  type        = string
 }
 variable "bucket_extension" {
-    description = "The bucket extension where the software installers reside"
-    type = string
+  description = "The bucket extension where the software installers reside"
+  type        = string
 }
 
 variable "deadline_version" {
@@ -97,5 +97,5 @@ variable "deadline_version" {
 }
 variable "user_data" {
   description = "The user data for the render node"
-  type = string
+  type        = string
 }
