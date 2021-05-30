@@ -7,7 +7,7 @@ locals {
 }
 
 dependency "terraform-aws-user-data-rendernode" {
-  config_path = "../terraform-aws-user-data-rendernode"
+  config_path = "../terraform-aws-user-data-rendernode/module"
   mock_outputs = {
     user_data_base64 = "fake-user-data"
   }
