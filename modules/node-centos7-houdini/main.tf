@@ -30,6 +30,7 @@ locals {
   extra_tags = {
     role  = "node_centos7_houdini"
     route = "private"
+    add_to_deadline_group = "cloud_c2_engine"
   }
   private_ip = length(aws_instance.node_centos7_houdini) > 0 ? aws_instance.node_centos7_houdini[0].private_ip : null
   id         = length(aws_instance.node_centos7_houdini) > 0 ? aws_instance.node_centos7_houdini[0].id : null
