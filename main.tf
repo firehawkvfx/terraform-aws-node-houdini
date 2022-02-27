@@ -29,7 +29,7 @@ data "aws_vpc" "vaultvpc" {
 # }
 
 data "aws_subnets" "private" {
-  count  = length(data.aws_vpc.rendervpc) > 0 ? 1 : 0
+  # count  = length(data.aws_vpc.rendervpc) > 0 ? 1 : 0
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.rendervpc[0].id]
@@ -40,7 +40,7 @@ data "aws_subnets" "private" {
 }
 
 data "aws_subnet" "private" {
-  for_each = toset(data.aws_subnets.private.ids)
+  for_each = data.aws_subnets.private.ids
   id       = each.value
 }
 
