@@ -8,5 +8,5 @@ output "id" {
   value = module.node_centos7_houdini.id
 }
 output "consul_private_dns" {
-  value = module.node_centos7_houdini.consul_private_dns
+  value = coelesce( module.node_centos7_houdini.consul_private_dns, "")
 }
