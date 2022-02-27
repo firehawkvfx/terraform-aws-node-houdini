@@ -10,22 +10,24 @@ dependency "data" {
   config_path = "../data"
   mock_outputs = {
     user_data_base64 = ""
-    rendervpc_id = ""
-    vaultvpc_id = ""
+    rendervpc_id     = ""
+    vaultvpc_id      = ""
   }
 }
 
 inputs = merge(
   local.common_vars.inputs,
   {
-    user_data          = dependency.data.outputs.user_data_base64
+    user_data    = dependency.data.outputs.user_data_base64
+    rendervpc_id = dependency.data.outputs.rendervpc_id
+    vaultvpc_id  = dependency.data.outputs.vaultvpc_id
   }
 )
 
 dependencies {
   paths = [
     "../data"
-    ]
+  ]
 }
 
 # skip = true
