@@ -13,21 +13,6 @@ data "aws_vpc" "vaultvpc" {
   id    = var.vaultvpc_id
 }
 
-# data "aws_subnet_ids" "public" {
-#   count  = length(data.aws_vpc.rendervpc) > 0 ? 1 : 0
-#   vpc_id = data.aws_vpc.rendervpc[0].id
-#   tags   = tomap({ "area" : "public" })
-# }
-# data "aws_subnet" "public" {
-
-#   for_each = data.aws_subnet_ids.public.ids
-#   id       = each.value
-# }
-# data "aws_subnet_ids" "private" {
-#   vpc_id = data.aws_vpc.rendervpc[0].id
-#   tags   = tomap({ "area" : "private" })
-# }
-
 data "aws_subnets" "private" {
   # count  = length(data.aws_vpc.rendervpc) > 0 ? 1 : 0
   filter {
@@ -40,7 +25,7 @@ data "aws_subnets" "private" {
 }
 
 data "aws_subnet" "private" {
-  for_each = data.aws_subnets.private.ids
+  for_each = toset(data.aws_subnets.private.ids)
   id       = each.value
 }
 
@@ -91,7 +76,8 @@ locals {
   vpc_id                     = data.aws_vpc.rendervpc[0].id
   vpn_cidr                   = var.vpn_cidr
   onsite_private_subnet_cidr = var.onsite_private_subnet_cidr
-  private_subnet_ids         = tolist(data.aws_subnet_ids.private.ids)
+  # private_subnet_ids         = tolist(data.aws_subnet_ids.private.ids)
+  private_subnet_ids         = [for s in data.aws_subnet.private : s.id]
   # private_subnet_cidr_blocks = [for s in data.aws_subnet.private : s.cidr_block]
   onsite_public_ip           = var.onsite_public_ip
   # private_route_table_ids    = data.aws_route_tables.private.ids
