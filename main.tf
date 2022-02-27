@@ -14,10 +14,9 @@ data "aws_vpc" "vaultvpc" {
 }
 
 data "aws_subnets" "private" {
-  # count  = length(data.aws_vpc.rendervpc) > 0 ? 1 : 0
   filter {
     name   = "vpc-id"
-    values = [data.aws_vpc.rendervpc[0].id]
+    values = length(var.rendervpc_id) > 0 ? [var.rendervpc_id] : []
   }
   tags = {
     area = "private"
@@ -29,21 +28,9 @@ data "aws_subnet" "private" {
   id       = each.value
 }
 
-# data "aws_subnet" "private" {
-#   count  = length(data.aws_vpc.rendervpc) > 0 ? 1 : 0
-#   # for_each = data.aws_subnet_ids.private.ids
-#   # id       = each.value
-#   vpc_id = data.aws_vpc.rendervpc[0].id
-#   tags   = tomap({ "area" : "private" })
-# }
-# data "aws_route_tables" "public" {
-#   vpc_id = data.aws_vpc.rendervpc[0].id
-#   tags   = tomap({ "area" : "public" })
-# }
-
 data "aws_route_tables" "private" {
-  count  = length(data.aws_vpc.rendervpc) > 0 ? 1 : 0
-  vpc_id = data.aws_vpc.rendervpc[0].id
+  count  = length(var.rendervpc_id) > 0 ? 1 : 0
+  vpc_id = var.rendervpc_id
   tags   = tomap({ "area" : "private" })
 }
 data "terraform_remote_state" "bastion_security_group" { # read the arn with data.terraform_remote_state.packer_profile.outputs.instance_role_arn, or read the profile name with data.terraform_remote_state.packer_profile.outputs.instance_profile_name
@@ -73,7 +60,7 @@ data "terraform_remote_state" "vpn_security_group" { # read the arn with data.te
 locals {
   common_tags                = var.common_tags
   mount_path                 = var.resourcetier
-  vpc_id                     = data.aws_vpc.rendervpc[0].id
+  vpc_id                     = var.rendervpc_id
   vpn_cidr                   = var.vpn_cidr
   onsite_private_subnet_cidr = var.onsite_private_subnet_cidr
   # private_subnet_ids         = tolist(data.aws_subnet_ids.private.ids)
@@ -84,7 +71,7 @@ locals {
   instance_name              = "${lookup(local.common_tags, "vpcname", "default")}_nodecentos7houdini_pipeid${lookup(local.common_tags, "pipelineid", "0")}"
 }
 module "node_centos7_houdini" {
-  count                       = ( length(data.aws_vpc.rendervpc) > 0 && length(data.aws_vpc.vaultvpc) > 0 ) ? 1 : 0
+  count                       = ( (length(var.rendervpc_id) > 0) && (length(var.vaultvpc_id) > 0) ) ? 1 : 0
   source                      = "./modules/node-centos7-houdini"
   name                        = local.instance_name
   node_centos7_houdini_ami_id = var.node_centos7_houdini_ami_id
