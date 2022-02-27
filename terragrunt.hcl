@@ -9,7 +9,9 @@ locals {
 dependency "data" {
   config_path = "../data"
   mock_outputs = {
-    user_data_base64 = "fake-user-data"
+    user_data_base64 = ""
+    rendervpc_id = ""
+    vaultvpc_id = ""
   }
 }
 

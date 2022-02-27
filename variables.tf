@@ -72,7 +72,6 @@ variable "common_tags" {
   description = "Common tags for all resources in a deployment run."
   type        = map(string)
 }
-
 variable "common_tags_vaultvpc" {
   description = "Common tags for resources in the vault vpc / firehawk-main project."
   type        = map(string)
@@ -98,4 +97,14 @@ variable "deadline_version" {
 variable "user_data" {
   description = "The user data for the render node"
   type        = string
+}
+variable "rendervpc_id" {
+  description = "The ID of the render VPC to deploy into."
+  type        = string
+  default     = null
+}
+variable "vaultvpc_id" {
+  description = "The ID of the render VPC to deploy into."
+  type        = string
+  default     = null
 }
