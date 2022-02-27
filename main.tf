@@ -30,7 +30,10 @@ data "aws_vpc" "vaultvpc" {
 
 data "aws_subnets" "private" {
   count  = length(data.aws_vpc.rendervpc) > 0 ? 1 : 0
-  vpc_id = data.aws_vpc.rendervpc[0].id
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.rendervpc[0].id]
+  }
   tags = {
     area = "private"
   }
