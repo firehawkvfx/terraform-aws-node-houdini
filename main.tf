@@ -63,11 +63,8 @@ locals {
   vpc_id                     = var.rendervpc_id
   vpn_cidr                   = var.vpn_cidr
   onsite_private_subnet_cidr = var.onsite_private_subnet_cidr
-  # private_subnet_ids         = tolist(data.aws_subnet_ids.private.ids)
   private_subnet_ids         = [for s in data.aws_subnet.private : s.id]
-  # private_subnet_cidr_blocks = [for s in data.aws_subnet.private : s.cidr_block]
   onsite_public_ip           = var.onsite_public_ip
-  # private_route_table_ids    = data.aws_route_tables.private.ids
   instance_name              = "${lookup(local.common_tags, "vpcname", "default")}_nodecentos7houdini_pipeid${lookup(local.common_tags, "pipelineid", "0")}"
 }
 module "node_centos7_houdini" {
