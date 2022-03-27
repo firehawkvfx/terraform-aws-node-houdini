@@ -83,5 +83,6 @@ variable "vpc_security_group_ids" {
 }
 variable "user_data" {
   description = "The user data for the render node"
-  type = string
+  type        = string
+  sensitive   = true
 }
